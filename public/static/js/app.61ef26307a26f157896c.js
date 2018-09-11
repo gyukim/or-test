@@ -1840,7 +1840,7 @@ webpackJsonp(
         jt = n.n(Rt);
       o.a.use(Mt.a, { dynamic: !0 });
       n("6A3X"),
-        o.a.use(jt.a, "http://localhost:65080"),
+        o.a.use(jt.a, "http://35.211.120.96"),
         (o.a.prototype.$http = It.a),
         (o.a.config.productionTip = !1),
         (window.eventBus = new o.a()),
