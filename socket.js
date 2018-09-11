@@ -1,13 +1,18 @@
 const SocketIO = require("socket.io");
-var connectConter=0;
-var nowSelectPage=0;
+var connectConter = 0;
+var nowSelectPage = 0;
 module.exports = server => {
-  const io = SocketIO(server);
+  const io = require("socket.io")(server);
+  server.listen(65080, () => {
+    console.log("connect 65080");
+  });
   io.on("connect", socket => {
     const req = socket.request;
     const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     connectConter++;
-    socket.on('disconnect',function(){connectConter--;});
+    socket.on("disconnect", function() {
+      connectConter--;
+    });
     console.log("connection!", ip, socket.id, req.ip);
     socket.broadcast.emit("otherConnect", socket.id);
     io.emit("connectCountDeliv", connectConter);
@@ -21,9 +26,7 @@ module.exports = server => {
       socket.broadcast.emit("colorChangeAct", data);
     });
     socket.on("pageNum", data => {
- 
-      nowSelectPage=data;
-      
+      nowSelectPage = data;
     });
 
     socket.on("pageNumYo", data => {
@@ -34,10 +37,10 @@ module.exports = server => {
       console.log(nowSelectPage);
       io.emit("startPageReceive", nowSelectPage);
     });
-    
-    
+
     socket.broadcast.emit("pageNumSend", nowSelectPage);
-    socket.on('disconnect',function(){    socket.broadcast.emit("connectCountDeliv", connectConter);
-  })
+    socket.on("disconnect", function() {
+      socket.broadcast.emit("connectCountDeliv", connectConter);
+    });
   });
 };
