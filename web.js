@@ -12,15 +12,12 @@ var http = require("http");
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || "3000");
+var port = normalizePort(process.env.PORT || "65080");
 app.set("port", port);
 /**
  * Create HTTP server.
  */
-const webSocket = require("./socket");
 var server = http.createServer(app);
-
-webSocket(server);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -29,6 +26,50 @@ webSocket(server);
 server.listen(port);
 server.on("error", onError);
 server.on("listening", onListening);
+
+const SocketIO = require("socket.io");
+var connectConter = 0;
+var nowSelectPage = 0;
+const io = require("socket.io")(server);
+
+io.on("connect", socket => {
+  const req = socket.request;
+  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  connectConter++;
+  socket.on("disconnect", function() {
+    connectConter--;
+  });
+  console.log("connection!", ip, socket.id, req.ip);
+  socket.broadcast.emit("otherConnect", socket.id);
+  io.emit("connectCountDeliv", connectConter);
+  socket.on("controlAction", data => {
+    console.log(data);
+    socket.broadcast.emit("displayControl", data);
+  });
+
+  socket.on("colorChange", data => {
+    console.log(data);
+    socket.broadcast.emit("colorChangeAct", data);
+  });
+  socket.on("pageNum", data => {
+    nowSelectPage = data;
+  });
+
+  socket.on("pageNumYo", data => {
+    console.log(nowSelectPage);
+    io.sockets.emit("pageNumRe", nowSelectPage);
+  });
+  socket.on("startPage", data => {
+    console.log(nowSelectPage);
+    io.emit("startPageReceive", nowSelectPage);
+  });
+
+  socket.broadcast.emit("pageNumSend", nowSelectPage);
+  socket.on("disconnect", function() {
+    socket.broadcast.emit("connectCountDeliv", connectConter);
+  });
+});
+
 // var io = require('socket.io')(server);
 
 /**
